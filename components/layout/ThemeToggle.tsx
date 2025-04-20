@@ -10,7 +10,6 @@ const ThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light");
   };
 
-  console.log("Current theme:", theme);
   return (
     <button onClick={toggleTheme}>
       <Sun className="hidden dark:block" />

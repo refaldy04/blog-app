@@ -7,8 +7,18 @@ import FormField from "../common/FormField";
 import Button from "../common/Button";
 import Heading from "../common/Heading";
 import SocialAuth from "./SocialAuth";
+import { useState, useTransition } from "react";
+import { login } from "@/actions/auth/login";
+import Alert from "../common/Alert";
+import { useRouter } from "next/navigation";
+import { LOGIN_REDIRECT } from "@/routes";
 
 const LoginForm = () => {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | undefined>("");
+
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -18,7 +28,18 @@ const LoginForm = () => {
   });
 
   const onSubmit: SubmitHandler<LoginSchemaType> = (data) => {
-    console.log("data>>", data);
+    setError("");
+    startTransition(() => {
+      login(data).then((res) => {
+        if (res?.error) {
+          setError(res.error);
+        }
+
+        if (!res?.error) {
+          router.push(LOGIN_REDIRECT);
+        }
+      });
+    });
   };
 
   return (
@@ -32,6 +53,7 @@ const LoginForm = () => {
         register={register}
         errors={errors}
         placeholder="email"
+        disabled={isPending}
       />
       <FormField
         id="password"
@@ -39,8 +61,14 @@ const LoginForm = () => {
         errors={errors}
         placeholder="password"
         type="password"
+        disabled={isPending}
       />
-      <Button type="submit" label="Login" />
+      {error ? <Alert message={error} error /> : null}
+      <Button
+        type="submit"
+        label={isPending ? "Submitting...." : "Login"}
+        disabled={isPending}
+      />
       <div className="flex justify-center my-2">Or</div>
       <SocialAuth />
     </form>

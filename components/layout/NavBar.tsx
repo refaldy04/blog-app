@@ -1,3 +1,5 @@
+"use client";
+
 import { MdNoteAlt } from "react-icons/md";
 import Container from "./Container";
 import ThemeToggle from "./ThemeToggle";
@@ -5,8 +7,25 @@ import SearchInput from "./SearchInput";
 import Notifications from "./Notifications";
 import UserButton from "./UserButton";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 const NavBar = () => {
+  const session = useSession();
+  const isLoggedIn = session.status === "authenticated";
+  const path = usePathname();
+
+  useEffect(() => {
+    if (!isLoggedIn && path) {
+      const updateSession = async () => {
+        await session.update();
+      };
+
+      updateSession();
+    }
+  }, [path, isLoggedIn]);
+
   return (
     <nav className="sticky top-0 border-b z-50 bg-white dark:bg-slate-950">
       <Container>
@@ -18,12 +37,14 @@ const NavBar = () => {
           <SearchInput />
           <div className="flex gap-5 sm:gap-8 items-center">
             <ThemeToggle />
-            <Notifications />
-            <UserButton />
-            <>
-              <Link href="/login">Login</Link>
-              <Link href="/register">Register</Link>
-            </>
+            {isLoggedIn ? <Notifications /> : null}
+            {isLoggedIn ? <UserButton /> : null}
+            {!isLoggedIn ? (
+              <>
+                <Link href="/login">Login</Link>
+                <Link href="/register">Register</Link>
+              </>
+            ) : null}
           </div>
         </div>
       </Container>
