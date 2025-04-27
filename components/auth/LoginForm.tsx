@@ -10,14 +10,22 @@ import SocialAuth from "./SocialAuth";
 import { useState, useTransition } from "react";
 import { login } from "@/actions/auth/login";
 import Alert from "../common/Alert";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LOGIN_REDIRECT } from "@/routes";
+import Link from "next/link";
 
 const LoginForm = () => {
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
 
   const router = useRouter();
+
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email in use with different provider!"
+      : "";
 
   const {
     register,
@@ -32,11 +40,16 @@ const LoginForm = () => {
     startTransition(() => {
       login(data).then((res) => {
         if (res?.error) {
+          router.replace("/login");
           setError(res.error);
         }
 
         if (!res?.error) {
           router.push(LOGIN_REDIRECT);
+        }
+
+        if (res?.success) {
+          setSuccess(res.success);
         }
       });
     });
@@ -64,13 +77,23 @@ const LoginForm = () => {
         disabled={isPending}
       />
       {error ? <Alert message={error} error /> : null}
+      {success ? <Alert message={success} success /> : null}
       <Button
         type="submit"
         label={isPending ? "Submitting...." : "Login"}
         disabled={isPending}
       />
       <div className="flex justify-center my-2">Or</div>
+      {urlError ? <Alert message={urlError} error /> : null}
       <SocialAuth />
+      <div className="flex items-end justify-end">
+        <Link
+          className="mt-2 text-sm underline text-slate-700 dark:text-slate-300"
+          href="/password-email-form"
+        >
+          Forgot Password?
+        </Link>
+      </div>
     </form>
   );
 };
