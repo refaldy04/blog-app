@@ -9,11 +9,17 @@ import AddCover from "./AddCover";
 import { useState } from "react";
 import CoverImage from "./CoverImage";
 import { tags } from "@/lib/tags";
+import dynamic from "next/dynamic";
+
+const BlockNoteEditor = dynamic(() => import("./editor/BlockNoteEditor"), {
+  ssr: false,
+});
 
 const CreateBlogForm = () => {
   const session = useSession();
   const userId = session.data?.user.userId;
   const [uploadedCover, setUploadedCover] = useState<string>();
+  const [content, setContent] = useState<string | undefined>();
 
   console.log(uploadedCover);
 
@@ -29,6 +35,10 @@ const CreateBlogForm = () => {
       isPublished: false,
     },
   });
+
+  const onChange = (content: string) => {
+    setContent(content);
+  };
 
   return (
     <form className="flex flex-col justify-between max-w-[1200px] m-auto min-h-[85vh]">
@@ -73,6 +83,7 @@ const CreateBlogForm = () => {
             })}
           </div>
         </fieldset>
+        <BlockNoteEditor onChange={onChange} />
       </div>
     </form>
   );
