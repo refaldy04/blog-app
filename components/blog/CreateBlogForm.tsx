@@ -3,13 +3,15 @@
 import { BlogSchema, BlogSchemaType } from "@/schemas/BlogSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSession } from "next-auth/react";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import FormField from "../common/FormField";
 import AddCover from "./AddCover";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CoverImage from "./CoverImage";
 import { tags } from "@/lib/tags";
 import dynamic from "next/dynamic";
+import Button from "../common/Button";
+import { set } from "zod";
 
 const BlockNoteEditor = dynamic(() => import("./editor/BlockNoteEditor"), {
   ssr: false,
@@ -36,12 +38,41 @@ const CreateBlogForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (uploadedCover) {
+      setValue("coverImage", uploadedCover, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+  }, [uploadedCover]);
+
+  useEffect(() => {
+    if (typeof content == "string") {
+      setValue("content", content, {
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+    }
+  }, [content]);
+
   const onChange = (content: string) => {
     setContent(content);
   };
 
+  const onPublish: SubmitHandler<BlogSchemaType> = (data) => {
+    console.log("data", data);
+  };
+
+  console.log("error", errors);
+
   return (
-    <form className="flex flex-col justify-between max-w-[1200px] m-auto min-h-[85vh]">
+    <form
+      onSubmit={handleSubmit(onPublish)}
+      className="flex flex-col justify-between max-w-[1200px] m-auto min-h-[85vh]"
+    >
       <div>
         {!!uploadedCover ? (
           <CoverImage
@@ -74,7 +105,7 @@ const CreateBlogForm = () => {
                   <input
                     type="checkbox"
                     value={tag}
-                    {...register}
+                    {...register("tags")}
                     disabled={false}
                   />
                   <span>{tag}</span>
@@ -84,6 +115,17 @@ const CreateBlogForm = () => {
           </div>
         </fieldset>
         <BlockNoteEditor onChange={onChange} />
+      </div>
+      <div className="border-t pt-2">
+        <div className="flex items-center justify-between gap-6">
+          <div>
+            <Button type="button" label="Delete" />
+          </div>
+          <div className="flex gap-4">
+            <Button type="submit" label="Publish" className="bg-blue-700" />
+            <Button type="button" label="Save as Draft" />
+          </div>
+        </div>
       </div>
     </form>
   );
